@@ -1,0 +1,517 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+    
+  infra - Learn to learn
+  
+  </title>
+  
+  
+  <link href="atom.xml" rel="alternate" title="Learn to learn" type="application/atom+xml">
+    <link rel="stylesheet" href="asset/css/foundation.min.css" />
+    <link rel="stylesheet" href="asset/css/docs.css" />
+    <script src="asset/js/vendor/modernizr.js"></script>
+    <script src="asset/js/vendor/jquery.js"></script>
+  <script src="asset/highlightjs/highlight.pack.js"></script>
+  <link href="asset/highlightjs/styles/github.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+  function before_search(){
+    var searchVal = 'site: ' + document.getElementById('search_input').value;
+    document.getElementById('search_q').value = searchVal;
+    return true;
+  }
+</script>
+  </head>
+  <body class="antialiased hide-extras">
+    
+    <div class="marketing off-canvas-wrap" data-offcanvas>
+      <div class="inner-wrap">
+
+
+<nav class="top-bar docs-bar hide-for-small" data-topbar>
+
+
+  <section class="top-bar-section">
+  <div class="row">
+      <div style="position: relative;width:100%;"><div style="position: absolute; width:100%;">
+        <ul id="main-menu" class="left">
+        
+        <li id=""><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li id=""><a target="_self" href="index.html">Home</a></li>
+        
+        </ul>
+
+        <ul class="right" id="search-wrap">
+          <li>
+<form target="_blank" onsubmit="return before_search();" action="http://google.com/search" method="get">
+    <input type="hidden" id="search_q" name="q" value="" />
+    <input tabindex="1" type="search" id="search_input"  placeholder="Search"/>
+</form>
+</li>
+          </ul>
+      </div></div>
+  </div>
+  </section>
+
+</nav>
+
+        <nav class="tab-bar show-for-small">
+  <a href="javascript:void(0)" class="left-off-canvas-toggle menu-icon">
+    <span> &nbsp; Learn to learn</span>
+  </a>
+</nav>
+
+<aside class="left-off-canvas-menu">
+      <ul class="off-canvas-list">
+        
+        <li><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li><a target="_self" href="index.html">Home</a></li>
+        
+
+    <li><label>Categories</label></li>
+
+        
+            <li><a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html">redis</a></li>
+        
+            <li><a href="reading.html">reading</a></li>
+        
+            <li><a href="k8s.html">k8s</a></li>
+        
+            <li><a href="golang.html">golang</a></li>
+        
+            <li><a href="infra.html">infra</a></li>
+         
+
+      </ul>
+    </aside>
+
+<a class="exit-off-canvas" href="#"></a>
+
+
+        <section id="main-content" role="main" class="scroll-container">
+        
+       
+
+ <script type="text/javascript">
+	$(function(){
+		$('#menu_item_index').addClass('is_active');
+	});
+</script>
+<div class="row">
+	<div class="large-8 medium-8 columns">
+		<div class="markdown-body home-categories">
+		
+			<div class="article">
+                <a class="clearlink" href="16661523130100.html">
+                
+                  <h1>断路器</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<p>源自控制电路<br/>
+- open<br/>
+- closed<br/>
+- half-open</p>
+
+<p>sony 实现</p>
+
+<p>接口设计：<br/>
+- 提供回调<br/>
+- 提供 hook</p>
+
+<p>基于周期进行统计</p>
+
+<p>不足：<br/>
+- 静态配置</p>
+
+<p>如何优化：</p>
+
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2022/10/19</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='infra.html'>infra</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="16653056511131.html">
+                
+                  <h1>服务治理</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<h2 id="toc_0">断路器模式</h2>
+
+<p>为什么需要断路器？<br/>
+试想这个一个场景：ServiceA 为 ServiceB 提供服务，正常情况下 ServiceA 能够很好的处理 ServiceB 的所有请求，世界岁月静好。突然有一天 ServiceA 突然抽风，服务负载高居不下，这个时候如果 ServiceB 还在继续发送请求无疑雪上加霜。一个处理方案是：停止发送请求，寄希望于 ServiceA 能够”缓“过来。等它正常之后，ServiceB 再继续发送请求。<br/>
+断路器就是为了这个场景而出现的一种技术。</p>
+
+
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                   <a href="16653056511131.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2022/10/9</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='infra.html'>infra</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="16388457732677.html">
+                
+                  <h1>服务端缓存工程实践</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<p>可以涉及的内容：</p>
+
+<ul>
+<li>缓存使用</li>
+<li>用redis如何解决惊群效应 </li>
+<li>redis怎么做分片、复制、同步、集群</li>
+<li>groupcache怎么实现</li>
+</ul>
+
+<h2 id="toc_0">缓存使用中的典型问题</h2>
+
+<h3 id="toc_1">缓存穿透</h3>
+
+<p>收到的请求的key在DB中不存在，进而无法缓存，这周大量的请求会<strong>穿透</strong>缓存，对数据库造成压力。<br/>
+解决方案：<br/>
+<strong>布隆过滤器</strong><br/>
+对于这种情况的应对方案，可以在系统内部实现一个布隆过滤器，依靠布隆过滤器来拦截这些不存在的查询请求。</p>
+
+<h3 id="toc_2">缓存击穿</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Thundering_herd_problem">维基百科Thundering_herd_problem</a><br/>
+<a href="https://www.facebook.com/Engineering/videos/10153675295382200/">Facebook如何处理缓存击穿</a></p>
+
+<p>某个热点数据突然miss，大量同样的请求抵达DB，造成压力。<br/>
+应对方案：<br/>
+<strong>同步锁</strong><br/>
+对请求的key加上同步锁，只让一个请求抵达DB，其他请求阻塞。如果是单进程内，可以使用<code>singleflight</code>来实现。如果是分布式情况下，可以加<em>分布式锁</em>。</p>
+
+<h3 id="toc_3">缓存雪崩</h3>
+
+<p>与<strong>缓存击穿</strong>不同的是，雪崩时是出现大量的数据miss，所有请求都抵达DB。</p>
+
+<h2 id="toc_4">业务中缓存的设计模式</h2>
+
+<p>缓存虽然不要求<strong>强一致性</strong>，但是对<strong>最终一致性</strong>还是有要求的。有时候业务代码不规范就可能导致数据污染，而出现数据不一致的情况。</p>
+
+<p>更新缓存的套路：</p>
+
+<ul>
+<li>Cache-Aside</li>
+<li>Read/Write Through</li>
+<li>Write Behind Caching</li>
+</ul>
+
+<h3 id="toc_5">Cache-Aside</h3>
+
+<p>从数据的读、写两个场景做不同的逻辑处理：</p>
+
+<ul>
+<li>read：先从cache读，如果miss则从DB读，然后更新cache，最后返回；</li>
+<li>write：先写DB，然后让cache失效。</li>
+</ul>
+
+<p>开发中主要是写流程可能会有不同，先写DB或者还是先写cache，是更新cache还是让cache失效。就这个问题会出现4种组合：</p>
+
+<table>
+<thead>
+<tr>
+<th>1</th>
+<th>先写DB</th>
+<th>再写cache</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>2</td>
+<td>先写DB</td>
+<td>再让cache失效</td>
+</tr>
+<tr>
+<td>3</td>
+<td>先写cache</td>
+<td>再写DB</td>
+</tr>
+<tr>
+<td>4</td>
+<td>先让cache失效</td>
+<td>再写DB</td>
+</tr>
+</tbody>
+</table>
+
+<p>第一，是先写DB还是后写cache？后写DB的话，可能会出现：一个写操作先更新了cache还未更新DB，这时，一个读操作从DB读了数据，这样就导致了不一致的情况出现。<br/>
+第二，是更新cache还是使cache失效？我们来考虑并发写的场景：两个并发写入，次新写入操作在最新写入操作后完成更新cache。如果是写cache的话，那么又会出现不一致的问题，如果是失效的话，那么先后次序就不那么重要了。<br/>
+所以，我们采用<strong>先写DB，再使cache失效</strong>的方式来处理缓存。</p>
+
+<blockquote>
+<p>其实，这种模式也会有问题。考虑一个场景：读请求从DB获取到数据还未写入cache时，写请求已经完成了DB更新且失效cache，读请求最后才完成cache写入。这样，数据还是不一致的。</p>
+</blockquote>
+
+<p>如何做到保持DB与cache保持<strong>强一致</strong>？那就需要用到2PC这种分布式事务的解决方案了。但是，这样会使得系统的复杂度变高。而Cache-Aside的方案只会在低概率出现不一致的情况，同时，我们可以对cache设置过期时间做到<strong>最终一致</strong>。所以，大部分情况下Cache-Aside还是可以接受的一个方案。</p>
+
+<h3 id="toc_6">Read/Write Through</h3>
+
+<p>Read/Write Through模式与Cache-Aside逻辑一致，只是对于应用程序而言只有一个cache，读写操作都是对cache进行的，而具体的持久化操作，则是由cache进行的。<br/>
+write through操作是同时写cache和db（同步），这样可以保证一致性，但是延迟较高。</p>
+
+<h3 id="toc_7">Write Behind Caching</h3>
+
+<p>Write Behind Caching其实与Write back技术差不多，应用程序只需要对cache进行读、写。最终cache与db的数据同步是由cache异步执行的。</p>
+
+<h3 id="toc_8">如何保证缓存与数据库的事务</h3>
+
+<p>TBD</p>
+
+<h3 id="toc_9">分布式下的缓存</h3>
+
+<p>TBD</p>
+
+<h2 id="toc_10">引用资料</h2>
+
+<ul>
+<li><a href="https://coolshell.cn/articles/17416.html">coolshell 缓存更新的套路</a></li>
+<li><a href="http://icyfenix.cn/architect-perspective/general-architecture/diversion-system/cache-middleware.html">凤凰架构</a></li>
+<li><a href="https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf">Scaling Memcache at Facebook</a></li>
+</ul>
+
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2021/12/7</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='infra.html'>infra</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+              
+
+
+			<div class="row">
+			  <div class="large-6 columns">
+			  <p class="text-left" style="padding-top:25px;">
+			   
+			  </p>
+			  </div>
+			  <div class="large-6 columns">
+			<p class="text-right" style="padding-top:25px;">
+			
+			</p>
+			  </div>
+			</div>
+		</div>
+	</div><!-- large 8 -->
+
+ <div class="large-4 medium-4 columns">
+  <div class="hide-for-small">
+    <div id="sidebar" class="sidebar">
+          <div id="site-info" class="site-info">
+            
+                <h1>Learn to learn</h1>
+                <div class="site-des">你的观点，到底是谁的观点。你的知识，到底是谁的知识。</div>
+                <div class="social">
+
+
+
+
+
+
+
+
+
+
+
+  <a target="_blank" class="rss" href="atom.xml" title="RSS">RSS</a>
+                
+              	 </div>
+          	</div>
+
+             
+
+              <div id="site-categories" class="side-item ">
+                <div class="side-header">
+                  <h2>Categories</h2>
+                </div>
+                <div class="side-content">
+
+      	<p class="cat-list">
+        
+            <a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html"><strong>redis</strong></a>
+        
+            <a href="reading.html"><strong>reading</strong></a>
+        
+            <a href="k8s.html"><strong>k8s</strong></a>
+        
+            <a href="golang.html"><strong>golang</strong></a>
+        
+            <a href="infra.html"><strong>infra</strong></a>
+         
+        </p>
+
+
+                </div>
+              </div>
+
+              <div id="site-categories" class="side-item">
+                <div class="side-header">
+                  <h2>Recent Posts</h2>
+                </div>
+                <div class="side-content">
+                <ul class="posts-list">
+	      
+		      
+			      <li class="post">
+			        <a href="16689980685488.html">Titus Gateway 的一致性哈希缓存</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16687556126647.html">CNI 规范手册整理</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16685796237082.html">《Kubernetes 编程》笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16682704610665.html">Golang slice string 学习笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16672244272009.html">k8s 提供的分布式选主</a>
+			      </li>
+		     
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		   
+		  		</ul>
+                </div>
+              </div>
+        </div><!-- sidebar -->
+      </div><!-- hide for small -->
+</div><!-- large 4 -->
+
+</div><!-- row -->
+
+ <div class="page-bottom clearfix">
+  <div class="row">
+   <p class="copyright">Copyright &copy; 2015
+Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a>,&nbsp; 
+Theme used <a target="_blank" href="http://github.com">GitHub CSS</a>.</p>
+  </div>
+</div>
+
+        </section>
+      </div>
+    </div>
+
+  
+    
+
+    <script src="asset/js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+      function fixSidebarHeight(){
+        var w1 = $('.markdown-body').height();
+          var w2 = $('#sidebar').height();
+          if (w1 > w2) { $('#sidebar').height(w1); };
+      }
+      $(function(){
+        fixSidebarHeight();
+      })
+      $(window).load(function(){
+          fixSidebarHeight();
+      });
+     
+    </script>
+
+    <script src="asset/chart/all-min.js"></script><script type="text/javascript">$(function(){    var mwebii=0;    var mwebChartEleId = 'mweb-chart-ele-';    $('pre>code').each(function(){        mwebii++;        var eleiid = mwebChartEleId+mwebii;        if($(this).hasClass('language-sequence')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = Diagram.parse($(this).text());            diagram.drawSVG(eleiid,{theme: 'simple'});        }else if($(this).hasClass('language-flow')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = flowchart.parse($(this).text());            diagram.drawSVG(eleiid);        }    });});</script>
+
+
+
+  </body>
+</html>

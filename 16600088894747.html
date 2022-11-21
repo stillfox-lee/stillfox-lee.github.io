@@ -1,0 +1,530 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+    
+  Go 并发模型：Piplines 和 Cancellation - Learn to learn
+  
+  </title>
+  
+  
+  <link href="atom.xml" rel="alternate" title="Learn to learn" type="application/atom+xml">
+    <link rel="stylesheet" href="asset/css/foundation.min.css" />
+    <link rel="stylesheet" href="asset/css/docs.css" />
+    <script src="asset/js/vendor/modernizr.js"></script>
+    <script src="asset/js/vendor/jquery.js"></script>
+  <script src="asset/highlightjs/highlight.pack.js"></script>
+  <link href="asset/highlightjs/styles/github.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+  function before_search(){
+    var searchVal = 'site: ' + document.getElementById('search_input').value;
+    document.getElementById('search_q').value = searchVal;
+    return true;
+  }
+</script>
+  </head>
+  <body class="antialiased hide-extras">
+    
+    <div class="marketing off-canvas-wrap" data-offcanvas>
+      <div class="inner-wrap">
+
+
+<nav class="top-bar docs-bar hide-for-small" data-topbar>
+
+
+  <section class="top-bar-section">
+  <div class="row">
+      <div style="position: relative;width:100%;"><div style="position: absolute; width:100%;">
+        <ul id="main-menu" class="left">
+        
+        <li id=""><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li id=""><a target="_self" href="index.html">Home</a></li>
+        
+        </ul>
+
+        <ul class="right" id="search-wrap">
+          <li>
+<form target="_blank" onsubmit="return before_search();" action="http://google.com/search" method="get">
+    <input type="hidden" id="search_q" name="q" value="" />
+    <input tabindex="1" type="search" id="search_input"  placeholder="Search"/>
+</form>
+</li>
+          </ul>
+      </div></div>
+  </div>
+  </section>
+
+</nav>
+
+        <nav class="tab-bar show-for-small">
+  <a href="javascript:void(0)" class="left-off-canvas-toggle menu-icon">
+    <span> &nbsp; Learn to learn</span>
+  </a>
+</nav>
+
+<aside class="left-off-canvas-menu">
+      <ul class="off-canvas-list">
+        
+        <li><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li><a target="_self" href="index.html">Home</a></li>
+        
+
+    <li><label>Categories</label></li>
+
+        
+            <li><a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html">redis</a></li>
+        
+            <li><a href="reading.html">reading</a></li>
+        
+            <li><a href="k8s.html">k8s</a></li>
+        
+            <li><a href="golang.html">golang</a></li>
+        
+            <li><a href="infra.html">infra</a></li>
+         
+
+      </ul>
+    </aside>
+
+<a class="exit-off-canvas" href="#"></a>
+
+
+        <section id="main-content" role="main" class="scroll-container">
+        
+       
+
+ <script type="text/javascript">
+  $(function(){
+    $('#menu_item_index').addClass('is_active');
+  });
+</script>
+<div class="row">
+  <div class="large-8 medium-8 columns">
+      <div class="markdown-body article-wrap">
+       <div class="article">
+          
+          <h1>Go 并发模型：Piplines 和 Cancellation</h1>
+     
+        <div class="read-more clearfix">
+          <span class="date">2022/8/9</span>
+
+          <span>posted in&nbsp;</span> 
+          
+              <span class="posted-in"><a href='golang.html'>golang</a></span>
+           
+         
+          <span class="comments">
+            
+
+            
+          </span>
+
+        </div>
+      </div><!-- article -->
+
+      <div class="article-content">
+      <p>上网冲浪的时候偶然发现了一篇 Golang 官网 <a href="https://go.dev/blog/pipelines">blog</a>，在此随意记录一下阅读的重点。<em>注：由于文章是 2014 年写的，所以里面一些技巧并不是很“现代”，但是整体的思路（编程、写作）都是很好的。</em></p>
+
+<p>并发问题几乎是编程领域最难的问题了，Go 所提出的并发模型最大优势就是，用简单并发模型抽象，将复杂的事情隐藏在了后面。让像我这种平庸的程序员也有一种自己能够驾驭并发的错觉。</p>
+
+<p>记得在 MIT 的操作系统课程里面就有提到过这个并发模型</p>
+
+<h2 id="toc_0">什么是 Pipeline？</h2>
+
+<p>Pipeline 是由多个 <em>stage</em> 组成的，每个 <em>stage</em> 通过 <code>channel</code> 前后连接，形成了管道。在每个 <em>stage</em> 中，都有执行着同样函数的 goroutine，这些 goroutine 的工作通常是：</p>
+
+<ul>
+<li>从上游 <em>inbound</em> channel 接受数据；</li>
+<li>用收到的数据执行一些逻辑，通常会产生一个新的数据；</li>
+<li>向下游 <em>outbound</em> channel 发送数据</li>
+</ul>
+
+<span id="more"></span><!-- more -->
+
+<h3 id="toc_1">一个简单的例子</h3>
+
+<p>分为 3 个 stage：<br/>
+1. 通过<code>gen</code>函数生成数据<br/>
+2. 接受数据，求平方<br/>
+3. 拼装pipeline</p>
+
+<p>通过开启一个 goroutine，它向下游 channel 写入数据，写完之后就 close 这个 channel：</p>
+
+<pre><code class="language-go">fun gen(nums ...int) &lt;-chan int {
+    out := make(chan int)
+    go func() {
+        for _, n := range nums {
+            out &lt;- n
+        }
+        close(out)
+    }()
+    return out
+</code></pre>
+
+<p>第二个 stage，从上游 channel 接收数据，并且将平方之后的数据写入下游 channel。特别的是：当上游 channel close 时，它也完成了工作，同时关闭下游的 channel。</p>
+
+<pre><code class="language-go">func sq(in &lt;-chan int) &lt;-chan int {
+    out := make(chan int)
+    go func() {
+        for n := range in {
+            out &lt;- n * n
+        }
+        close(out)
+    }()
+    return out
+</code></pre>
+
+<p>最后，拼装整个 pipeline：</p>
+
+<pre><code class="language-go">func main() {
+    // set up the pipeline
+    c := gen(2, 3)
+    out := sq(c)
+    
+    // consume the output.
+    fmt.Println(&lt;-out)  // 4
+    fmt.Println(&lt;-out)  // 9
+</code></pre>
+
+<p>然后，我们来看看 pipeline 的威力：</p>
+
+<pre><code class="language-go">func main() {
+    // set up the pipeline and consume the output.
+    for n := range sq(sq(gen(2, 3)) {
+        fmt.Println(n) // 16 then 81
+    }
+}    
+</code></pre>
+
+<p>pipeline 的现实意义就是，我们有了一个个基础的运算单元，然后可以任意的组装它从而获得更多的处理能力。Go 的 founder 是忠实的 Unix 用户，他们在 Go 设计中秉承了 Unix 的 KISS 和 pipeline 思想。</p>
+
+<blockquote>
+<p>这种 pipeline 最早起源应该是Doug McIlroy为 Unix 创造了 pipe。有了 pipe 之后，Unix 系统在实现其他功能的时候就能很方便的进行组装。在 Russ Cox 的<a href="https://swtch.com/%7Ersc/thread/">blog</a>中也专门讲了关于贝尔实验室和 CSP 线程的相关内容。</p>
+</blockquote>
+
+<h3 id="toc_2">Fan-out, fan-in</h3>
+
+<p>Fan-out —— 多个函数可以从一个 channel 读取数据<em>（类似于MQ）</em>。<br/>
+Fan-in —— 一个函数可以从多个 channel 读取数据。</p>
+
+<p>我们可以修改一下上面的 pipeline：运行两个<code>sq</code>函数，都从同一个 channel 获取数据；然后利用一个新函数<code>merge</code>来 把结果fan-in：</p>
+
+<pre><code class="language-go">func main() {
+    in := gen(2, 3)
+    
+    // distribute the sq work across two goroutines that both read from in.
+    c1 := sq(in)
+    c2 := sq(in)
+    
+    // consume the merged output from c1 and c2.
+    for n := range merge(c1, c2) {
+        fmt.Println(n)  // 4 then 9, or 9 then 4
+    }
+}
+</code></pre>
+
+<p><code>merge</code>函数接收多个 channel，从 channel 中并行获取数据，合并到一个 channel 然后输出。</p>
+
+<pre><code class="language-go">func merge(cs ...&lt;-chan int) &lt;-chan int {
+    var wg sync.WaitGroup
+    out := make(chan int)
+    
+    // start an output goroutine for each input channel in cs. output copies values from c to out until c is closed, then calls wg.Done.
+    output := func(c &lt;-chan int) {
+        for n := range c {
+            out &lt;- n
+        }
+        wg.Done()
+    }
+    wg.Add(len(cs))
+    for _, c := range cs {
+        go output(c)
+    }
+    
+    // start a goroutine to close out once all the output goroutine are done. This must start after the wg.Add call.
+    go func() {
+        wg.Wait()
+        close(out)
+    }()
+    return out
+}
+</code></pre>
+
+<h3 id="toc_3">存在的问题</h3>
+
+<p>在上面的 pipeline 中，存在着这样一个模式：</p>
+
+<ul>
+<li>stage 在完成所有的输出操作后，会关闭掉输出的 channel</li>
+<li>stage 会一直从输入 channel 获取数据，直到它被关闭</li>
+</ul>
+
+<p>在实际的使用中，我们可能需要在 pipeline 中控制上游停止输出。比如下游发生错误。所以，我们需要一个在 channel 中的停止机制。</p>
+
+<h2 id="toc_4">取消机制</h2>
+
+<p>我们可以通过一个 channel 作为信号渠道，一旦这个 channel 被 close，就意味着 pipeline 终止了。整个流程中的所有计算都需要停止，为此可以创建一个 <code>done := make(chan struct{})</code>。</p>
+
+<pre><code class="language-go">fun sq(done &lt;-chan struct{}, in &lt;-chan int) &lt;-chan int {
+    out := make(chan int)
+    go func() {
+        defer close(out)    // close outbound channel
+        for n := range in {
+            select {
+            case out &lt;- n * n:
+            case &lt;-done:    // downstream done
+                return      // defer
+            }
+        }
+    }()
+    return out
+}
+
+func merge(done &lt;-chan struct{}, cs ...&lt;-chan int) &lt;-chan int {
+    var wg syncWaitGroup
+    out := make(chan int)
+    
+    // start an output goroutine for each input channel in cs.
+    // output copies values from c to out until c or done is closed, then calls wg.Done.
+    output := func(c &lt;-chan int) {
+        defer wg.Done()
+        for n := range c {
+            select {
+            case out &lt;- n:
+            case &lt;-done:    // downstream done
+                return
+            }
+        }
+    }
+    
+    wg.Add(len(cs))
+    for _, c := range cs {
+        go output(c)
+    }
+    
+    go func() {
+        wg.Wait()
+        close(out)
+    }()
+    return out
+}
+
+func main() {
+    done := make(chan struct{})
+    defer close(done)
+    
+    in := gen(done, 2, 3)
+    c1 := sq(done, in)
+    c2 := sq(done, in)
+    
+    out := merge(done, c1, c2)
+    fmt.Println(&lt;-out)
+    
+    // done will be closed by the defer call.
+}
+</code></pre>
+
+<p>构建 pipeline的指导原则：</p>
+
+<ul>
+<li>stage 完成了工作之后，要 close 它的输出 channel</li>
+<li>stage 可以一直接收输入 channel 直到 channel 被 close，或者上游不阻塞了。</li>
+</ul>
+
+
+    
+
+      </div>
+
+      <div class="row">
+        <div class="large-6 columns">
+        <p class="text-left" style="padding:15px 0px;">
+      
+          <a href="16644331920004.html" 
+          title="Previous Post: 如何开发 Operator">&laquo; 如何开发 Operator</a>
+      
+        </p>
+        </div>
+        <div class="large-6 columns">
+      <p class="text-right" style="padding:15px 0px;">
+      
+          <a  href="16587108657309.html" 
+          title="Next Post: k8s 网络基础">k8s 网络基础 &raquo;</a>
+      
+      </p>
+        </div>
+      </div>
+      <div class="comments-wrap">
+        <div class="share-comments">
+          
+
+          
+
+          
+        </div>
+      </div>
+    </div><!-- article-wrap -->
+  </div><!-- large 8 -->
+
+
+
+
+ <div class="large-4 medium-4 columns">
+  <div class="hide-for-small">
+    <div id="sidebar" class="sidebar">
+          <div id="site-info" class="site-info">
+            
+                <h1>Learn to learn</h1>
+                <div class="site-des">你的观点，到底是谁的观点。你的知识，到底是谁的知识。</div>
+                <div class="social">
+
+
+
+
+
+
+
+
+
+
+
+  <a target="_blank" class="rss" href="atom.xml" title="RSS">RSS</a>
+                
+              	 </div>
+          	</div>
+
+             
+
+              <div id="site-categories" class="side-item ">
+                <div class="side-header">
+                  <h2>Categories</h2>
+                </div>
+                <div class="side-content">
+
+      	<p class="cat-list">
+        
+            <a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html"><strong>redis</strong></a>
+        
+            <a href="reading.html"><strong>reading</strong></a>
+        
+            <a href="k8s.html"><strong>k8s</strong></a>
+        
+            <a href="golang.html"><strong>golang</strong></a>
+        
+            <a href="infra.html"><strong>infra</strong></a>
+         
+        </p>
+
+
+                </div>
+              </div>
+
+              <div id="site-categories" class="side-item">
+                <div class="side-header">
+                  <h2>Recent Posts</h2>
+                </div>
+                <div class="side-content">
+                <ul class="posts-list">
+	      
+		      
+			      <li class="post">
+			        <a href="16689980685488.html">Titus Gateway 的一致性哈希缓存</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16687556126647.html">CNI 规范手册整理</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16685796237082.html">《Kubernetes 编程》笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16682704610665.html">Golang slice string 学习笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16672244272009.html">k8s 提供的分布式选主</a>
+			      </li>
+		     
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		   
+		  		</ul>
+                </div>
+              </div>
+        </div><!-- sidebar -->
+      </div><!-- hide for small -->
+</div><!-- large 4 -->
+
+</div><!-- row -->
+
+ <div class="page-bottom clearfix">
+  <div class="row">
+   <p class="copyright">Copyright &copy; 2015
+Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a>,&nbsp; 
+Theme used <a target="_blank" href="http://github.com">GitHub CSS</a>.</p>
+  </div>
+</div>
+
+        </section>
+      </div>
+    </div>
+
+  
+    
+
+    <script src="asset/js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+      function fixSidebarHeight(){
+        var w1 = $('.markdown-body').height();
+          var w2 = $('#sidebar').height();
+          if (w1 > w2) { $('#sidebar').height(w1); };
+      }
+      $(function(){
+        fixSidebarHeight();
+      })
+      $(window).load(function(){
+          fixSidebarHeight();
+      });
+     
+    </script>
+
+    <script src="asset/chart/all-min.js"></script><script type="text/javascript">$(function(){    var mwebii=0;    var mwebChartEleId = 'mweb-chart-ele-';    $('pre>code').each(function(){        mwebii++;        var eleiid = mwebChartEleId+mwebii;        if($(this).hasClass('language-sequence')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = Diagram.parse($(this).text());            diagram.drawSVG(eleiid,{theme: 'simple'});        }else if($(this).hasClass('language-flow')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = flowchart.parse($(this).text());            diagram.drawSVG(eleiid);        }    });});</script>
+
+
+
+  </body>
+</html>

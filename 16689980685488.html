@@ -1,0 +1,444 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+    
+  Titus Gateway 的一致性哈希缓存 - Learn to learn
+  
+  </title>
+  
+  
+  <link href="atom.xml" rel="alternate" title="Learn to learn" type="application/atom+xml">
+    <link rel="stylesheet" href="asset/css/foundation.min.css" />
+    <link rel="stylesheet" href="asset/css/docs.css" />
+    <script src="asset/js/vendor/modernizr.js"></script>
+    <script src="asset/js/vendor/jquery.js"></script>
+  <script src="asset/highlightjs/highlight.pack.js"></script>
+  <link href="asset/highlightjs/styles/github.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+  function before_search(){
+    var searchVal = 'site: ' + document.getElementById('search_input').value;
+    document.getElementById('search_q').value = searchVal;
+    return true;
+  }
+</script>
+  </head>
+  <body class="antialiased hide-extras">
+    
+    <div class="marketing off-canvas-wrap" data-offcanvas>
+      <div class="inner-wrap">
+
+
+<nav class="top-bar docs-bar hide-for-small" data-topbar>
+
+
+  <section class="top-bar-section">
+  <div class="row">
+      <div style="position: relative;width:100%;"><div style="position: absolute; width:100%;">
+        <ul id="main-menu" class="left">
+        
+        <li id=""><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li id=""><a target="_self" href="index.html">Home</a></li>
+        
+        </ul>
+
+        <ul class="right" id="search-wrap">
+          <li>
+<form target="_blank" onsubmit="return before_search();" action="http://google.com/search" method="get">
+    <input type="hidden" id="search_q" name="q" value="" />
+    <input tabindex="1" type="search" id="search_input"  placeholder="Search"/>
+</form>
+</li>
+          </ul>
+      </div></div>
+  </div>
+  </section>
+
+</nav>
+
+        <nav class="tab-bar show-for-small">
+  <a href="javascript:void(0)" class="left-off-canvas-toggle menu-icon">
+    <span> &nbsp; Learn to learn</span>
+  </a>
+</nav>
+
+<aside class="left-off-canvas-menu">
+      <ul class="off-canvas-list">
+        
+        <li><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li><a target="_self" href="index.html">Home</a></li>
+        
+
+    <li><label>Categories</label></li>
+
+        
+            <li><a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html">redis</a></li>
+        
+            <li><a href="reading.html">reading</a></li>
+        
+            <li><a href="k8s.html">k8s</a></li>
+        
+            <li><a href="golang.html">golang</a></li>
+        
+            <li><a href="infra.html">infra</a></li>
+         
+
+      </ul>
+    </aside>
+
+<a class="exit-off-canvas" href="#"></a>
+
+
+        <section id="main-content" role="main" class="scroll-container">
+        
+       
+
+ <script type="text/javascript">
+  $(function(){
+    $('#menu_item_index').addClass('is_active');
+  });
+</script>
+<div class="row">
+  <div class="large-8 medium-8 columns">
+      <div class="markdown-body article-wrap">
+       <div class="article">
+          
+          <h1>Titus Gateway 的一致性哈希缓存</h1>
+     
+        <div class="read-more clearfix">
+          <span class="date">2022/11/21</span>
+
+          <span>posted in&nbsp;</span> 
+          
+              <span class="posted-in"><a href='reading.html'>reading</a></span>
+           
+         
+          <span class="comments">
+            
+
+            
+          </span>
+
+        </div>
+      </div><!-- article -->
+
+      <div class="article-content">
+      <p>之前就学习过一致性哈希的知识，最近看到一篇 Netflix 的<a href="https://netflixtechblog.com/consistent-caching-mechanism-in-titus-gateway-6cb89b9ce296">blog</a>，介绍了一致性哈希在 Gateway 的应用，所以整理一下阅读中的内容。</p>
+
+<p>Titus 是 Netflix cloud 的容器runtime。它现在已经从 Mesos 转移到了 K8s 中。随着业务发展，Titus 也需要做一些横向 scale。这篇文章介绍了应该如何通过横向拓展来应付大量的 API 调用。</p>
+
+<p>通过在 API gateway 层引入了一个缓存机制。使得可以从原来的高负载的单节点 leader 网关，转换到具有数据一致性的多节点网关。而且，数据一致性是能够获得严格保证的，不管 gateway 的 client 以任意顺序，访问任意节点，获得的数据都是一致的。</p>
+
+<span id="more"></span><!-- more -->
+
+<h2 id="toc_0">Overview</h2>
+
+<p>在单个集群的视角来看，大致的架构图：<br/>
+<img src="media/16689980685488/16689992082929.jpg" alt=""/></p>
+
+<p><strong>Active Data</strong> 包括现在正在运行的 job 和 task。<br/>
+<strong>Titus Job Coordinator</strong> 是一个被选举出来的 leader，同时负责管理 <code>Active Data</code>的状态。<br/>
+<strong>Titus Gateway</strong> 负责处理 client 的请求。一个请求可能是创建一个 job，或者是对 <code>Active Data</code>的查询，或者是查询 <code>Archive Store</code>的查询。所有的请求，会在多个 Titus Gateway 节点之间有 LB，而且所有的<code>read</code>都是一致的。而所有的<code>write</code>，都需要经过 Leader，如果 Leader 故障，则无法写入。</p>
+
+<p>关于Leader 的状态管理：<br/>
+当一个新的 leader 被选举出来之后，它会从持久化存储中读取所有的数据。在它的内存数据被更新之前，它会将数据写入到 <code>Active Data Store</code>中存储。<br/>
+当 job 或者 task 完成之后，他们对应的数据会首先写入到 <code>Archive Data Store</code>中，然后才从<code>Active Data Store</code>和 leader 的内存中删除。</p>
+
+<!--
+leader 的内存和 Active Data Store 的关系是什么？
+-->
+
+<p>在最初的系统中，所有访问<code>Active Data</code> 的请求，都是由一个单节点<code>Titus Job Coordinator</code>处理的。它能够实现只提供最新的数据，而且不会遇到<code>read-your-wirte</code>或者是<code>monotonice-read</code>等一致性模型中的问题。</p>
+
+<blockquote>
+<p>read-your-writes consistency<br/>
+如果一个程序能够处理对于数据 X 的写入操作，那么它一定可以正常响应对于数据 X 的读操作<br/>
+Monotonic read consistency<br/>
+如果一个程序能够读取到数据 X，那么它一定能够成功读取到数据 X 或者是比 X 更加新的值。它保证了只要程序在时间 <em>t</em> 能够读到 X 值，那么这个程序一定不会返回旧版本的值。</p>
+</blockquote>
+
+<p><img src="media/16689980685488/16690130515022.jpg" alt=""/></p>
+
+<p>Titus API上的<em>数据一致性</em>是非常好的，因为它简化了客户端的实现。<em>因果一致性</em>，包括<code>read-your-wirte</code>和<code>monotonice-read</code>，使得无需在客户端实现同步机制。在PACELC条款中，我们选择了PC/EC，并拥有与我们以前的系统相同的写的可用性水平，同时提高了读的可用性。</p>
+
+<blockquote>
+<p>Fully ACID systems such as VoltDB/H-Store and Megastore are PC/EC: they refuse to give up consistency, and will pay the availability and latency costs to achieve it. BigTable and related systems such as HBase are also PC/EC.</p>
+</blockquote>
+
+<p><strong>可以理解为，他们的方案在为了达到数据一致性，而牺牲了一部分的可用性，同时可能会带来一些延迟</strong></p>
+
+<p>例如，一个workflow批处理编排系统可能会在一个 workflow中创建多个 job。在 job创建之后，它会负责监控 job 的运行状态。如果系统创建了一个新的 job，然后马上发起一个 job 状态的查询，假设系统中存在着<strong>数据传播滞后</strong>（这是很常见的），那么系统就必须要针对实现一套机制来跟踪 job 的状态，例如超时重试等。但是 Titus API 的设计是只反映最新的数据状态，所以在客户端侧不需要实现这些东西。</p>
+
+<p><strong>遇到的问题</strong><br/>
+随着流量的上涨，单节点的 leader 开始变得不堪重负。我们开始做出调整：将所有的请求交给<code>Titus Gateway</code>（多节点）处理，同时，最初的一致性还是需要保证的。设计就变成了这样：<img src="media/16689980685488/16690151596221.jpg" alt=""/></p>
+
+<p><strong>新的设计方案</strong><br/>
+来自Titus Job Coordinator的状态通过一个持久的stream连接进行复制，event传播的延迟很低。可以通过一个协议监控Titus Job Coordinator缓存的一致性水平，并保证客户总是收到最新的数据版本。缓存与当前的Leader进程保持同步。当发生故障时（由于当前Leader的节点故障或系统升级），从新选出的Leader那里加载新的快照，取代以前的缓存状态。这样，处理客户端请求的Titus Gateway就可以横向扩展了。</p>
+
+<h2 id="toc_1">如何保证 cache 是最新的</h2>
+
+<p>对于那些从一开始就建立了一致的数据版本计划的系统来说，这是一个简单的答案，并且可以让客户端来遵循既定的协议。Kubernetes就是一个很好的例子。每个对象和每个从Kubernetes集群读取的集合都有一个唯一的revision，这是一个单调增长的数字。用户可以请求自上次收到的revision以来的所有变化。<br/>
+在我们的案例中，我们不想改变API协议，并对我们的用户施加额外的限制和要求。这样做需要大量的迁移工作，把所有的客户从旧的API上移走。根据我们的经验，这样的迁移需要不小的工作量，尤其是迁移的时间表并不完全在我们的控制之中。</p>
+
+<p>为了履行现有的API协议，我们必须保证，对于在时间T₀收到的请求，返回给客户端的数据是从一个缓存中读取的，并且该缓存一定包含了Titus Job Coorinator 在时间T₀之前的所有状态更新。<br/>
+<img src="media/16689980685488/16690168133731.jpg" alt=""/></p>
+
+<blockquote>
+<p>也就是说，在T₀的请求收到那一刻开始，到 Titus Gateway 返回数据之间，Titus Gateway 必须同步等待 Titus Job Coordinator将所有的 state change event 发送到 Cache。并且同步完成。</p>
+</blockquote>
+
+<p>在 Titus Gateway 和 Titus Job Coordinator 之间的数据传递如下：<br/>
+<img src="media/16689980685488/16690170958531.jpg" alt=""/></p>
+
+<p>每个阶段有着不同的速度。</p>
+
+<p>由 Event Source 产生的事件可能在任意阶段被缓冲（可理解为 Event 已经到达，但是在 buffer 中等待被发送。）。此外，由于从Titus Gateway到Titus Job Coordinator的每个event stream 都有各自独立的管道，每个网关实例中的缓存状态可能有很大的不同。</p>
+
+<p>让我们假设一个事件序列E₁...E₁₀，以及它们在时间T₁的两个Titus Gateway实例管道中的位置：<br/>
+<img src="media/16689980685488/16690173871481.jpg" alt=""/></p>
+
+<p>如果一个客户端在T₁的时候请求Titus Gateway 2，它将读取E₈版本的数据。如果它立即向 Titus Gateway 1发出请求，那么相对于其他 gateway 来说，那里的缓存是滞后的，所以客户端可能会读到一个较早版本的数据。<br/>
+在这两种情况下，缓存中的数据都不是最新的。如果一个客户端在时间T₀创建了一个新的对象，并且该对象的值被事件更新E₁₀捕获，那么这个对象在时间T₁就会在两个网关缓存中miss。对于成功完成创建请求的客户端来说，后续的查询却返回了一个未找到的错误，这是个非预期的结果（违反<code>read-your-write</code>）。</p>
+
+<p>解决方法是flush所有在时间T₁之前创建的事件，并强迫客户等待缓存接收所有事件。这项工作可以分成两个不同的步骤，每个步骤都有自己独特的解决方案。</p>
+
+<h2 id="toc_2">实现细节</h2>
+
+<p>两种策略：</p>
+
+<ul>
+<li>Titus Gateway &lt;-&gt; Titus Job Coordinator 在这两者之间添加一个同步的通信协议.</li>
+<li>在单个服务器进程中使用一个单调时间源，如Java的nano time。Java的纳米时间被用作JVM中的逻辑时间，为JVM进程中发生的事件定义一个顺序。或者，一个基于原子整数值生成器的解决方案也足够了，它可以为事件排序。有了本地的逻辑时间源，就避免了分布式时钟同步的问题。（引入一种偏序关系 happen-before）</li>
+</ul>
+
+<p>如果Titus Gateway 在没有同步步骤的情况下订阅了Titus Job Coordinator的事件流，那么数据滞后的数量将无法估计。为了保证Titus Gateway 收到所有发生在某个时间Tₙ的状态更新，两个服务之间必须有同步机制。下面是我们实现的同步协议：</p>
+
+<ol>
+<li>Titus Gateway 收到一个 client 请求 ( queryₐ ).</li>
+<li>Titus Gateway 向本地缓存查询最新的数据.</li>
+<li>Titus Gateway 的本地缓存记录下本地的逻辑时间，然后通过一个<code>keep-alive</code> 将这个本地时间发送给 Titus Job Coordinator (keep-aliveₐ).</li>
+<li>Titus Job Coordinator 将 request 存储下来，同时将收到 request 的本地时间 Tₐ 也存储起来 ( KAₐ, Tₐ ).</li>
+<li><p>Titus Job Coordinator 向 Titus Gateway发送状态更新，直到前者观察到一个状态更新事件（例如 E3），并且其时间戳超过本地逻辑时间（E1，E2）.</p>
+
+<blockquote>
+<p>这里首先要理解的一点：Coordinator会将 write 操作的事件存放在Event Stream中。处理 query 的时候，需要去 apply 这些 Event，类似于一个 EventSource 系统，通过 apply 所有的 Event得到系统某一刻的状态。<br/>
+然后还有一个时钟先后关系，Coordinator需要确定的是：发送出去的 Event，一定是在本地时间Tₐ 之前的 Event。</p>
+</blockquote></li>
+<li><p>这时, Titus Job Coordinator 发送一个 keep-alive 的 ACK (KAₐ keep-alive ACK).</p></li>
+<li><p>Titus Gateway 收到keep-alive ACK，因此知道它的本地缓存包含到keep-alive请求发送时发生的所有状态变化。</p></li>
+<li><p>此时，Titus Gateway 的本地缓存获取到了最新的数据，可以返回 client 的查询请求 ( responseₐ ).</p></li>
+</ol>
+
+<p><img src="media/16689980685488/16690221206496.jpg" alt=""/></p>
+
+<p>上面的过程</p>
+
+<h2 id="toc_3">性能测试</h2>
+
+<h2 id="toc_4">总结</h2>
+
+<p>在我们以前的系统达到垂直扩展的极限后，我们很高兴能实施一个真正的解决方案，为Titus的只读API提供（实际意义上的）无限扩展性。我们能够实现更好的尾部延迟，在流量低的时候，只需牺牲一点中位延迟，并获得了横向扩展我们的API网关处理层的能力，以处理流量的增长，而无需改变API客户端。升级过程是完全透明的，没有一个客户在迁移期间和之后观察到API行为的任何异常或变化。</p>
+
+<p>这里描述的机制可以应用于任何依赖单领导选举的组件作为管理数据的真实来源的系统，其中数据适合在内存中，并且延迟较低。</p>
+
+<p>至于现有技术，文献中对缓存一致性协议有大量的描述，包括在多处理器架构（Adve &amp; Gharachorloo, 1996）和分布式系统（Gwertzman &amp; Seltzer, 1996）中。我们的工作符合Gwertzman和Seltzer（1996）在他们的调查报告中所探讨的client polling和invalidation protocols的机制。中央时间戳以促进只读 replica的线性化，这与Calvin系统（FoundationDB等系统中的现实世界实施实例）以及AWS Aurora中的replica watermarking类似。</p>
+
+<h2 id="toc_5">我的个人思考</h2>
+
+<p>我不确定这个分布式算法是否有得到形式化验证，在逻辑上是否是正确的。而且，文中也没有给出一个分布式的测试验证。不过，就我的理解来看，这个算法基本依赖与 JVM 的单调时钟，如果 OS 的时钟发生了偏移（例如 NTP同步）不知道 JVM 会不会有影响。<br/>
+如果使用类似于 Raft 这类的算法，正确性应该是没有问题的，但可能复杂度和效率就不一定是好的解决方案了。</p>
+
+
+    
+
+      </div>
+
+      <div class="row">
+        <div class="large-6 columns">
+        <p class="text-left" style="padding:15px 0px;">
+      
+        </p>
+        </div>
+        <div class="large-6 columns">
+      <p class="text-right" style="padding:15px 0px;">
+      
+          <a  href="16687556126647.html" 
+          title="Next Post: CNI 规范手册整理">CNI 规范手册整理 &raquo;</a>
+      
+      </p>
+        </div>
+      </div>
+      <div class="comments-wrap">
+        <div class="share-comments">
+          
+
+          
+
+          
+        </div>
+      </div>
+    </div><!-- article-wrap -->
+  </div><!-- large 8 -->
+
+
+
+
+ <div class="large-4 medium-4 columns">
+  <div class="hide-for-small">
+    <div id="sidebar" class="sidebar">
+          <div id="site-info" class="site-info">
+            
+                <h1>Learn to learn</h1>
+                <div class="site-des">你的观点，到底是谁的观点。你的知识，到底是谁的知识。</div>
+                <div class="social">
+
+
+
+
+
+
+
+
+
+
+
+  <a target="_blank" class="rss" href="atom.xml" title="RSS">RSS</a>
+                
+              	 </div>
+          	</div>
+
+             
+
+              <div id="site-categories" class="side-item ">
+                <div class="side-header">
+                  <h2>Categories</h2>
+                </div>
+                <div class="side-content">
+
+      	<p class="cat-list">
+        
+            <a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html"><strong>redis</strong></a>
+        
+            <a href="reading.html"><strong>reading</strong></a>
+        
+            <a href="k8s.html"><strong>k8s</strong></a>
+        
+            <a href="golang.html"><strong>golang</strong></a>
+        
+            <a href="infra.html"><strong>infra</strong></a>
+         
+        </p>
+
+
+                </div>
+              </div>
+
+              <div id="site-categories" class="side-item">
+                <div class="side-header">
+                  <h2>Recent Posts</h2>
+                </div>
+                <div class="side-content">
+                <ul class="posts-list">
+	      
+		      
+			      <li class="post">
+			        <a href="16689980685488.html">Titus Gateway 的一致性哈希缓存</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16687556126647.html">CNI 规范手册整理</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16685796237082.html">《Kubernetes 编程》笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16682704610665.html">Golang slice string 学习笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16672244272009.html">k8s 提供的分布式选主</a>
+			      </li>
+		     
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		   
+		  		</ul>
+                </div>
+              </div>
+        </div><!-- sidebar -->
+      </div><!-- hide for small -->
+</div><!-- large 4 -->
+
+</div><!-- row -->
+
+ <div class="page-bottom clearfix">
+  <div class="row">
+   <p class="copyright">Copyright &copy; 2015
+Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a>,&nbsp; 
+Theme used <a target="_blank" href="http://github.com">GitHub CSS</a>.</p>
+  </div>
+</div>
+
+        </section>
+      </div>
+    </div>
+
+  
+    
+
+    <script src="asset/js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+      function fixSidebarHeight(){
+        var w1 = $('.markdown-body').height();
+          var w2 = $('#sidebar').height();
+          if (w1 > w2) { $('#sidebar').height(w1); };
+      }
+      $(function(){
+        fixSidebarHeight();
+      })
+      $(window).load(function(){
+          fixSidebarHeight();
+      });
+     
+    </script>
+
+    <script src="asset/chart/all-min.js"></script><script type="text/javascript">$(function(){    var mwebii=0;    var mwebChartEleId = 'mweb-chart-ele-';    $('pre>code').each(function(){        mwebii++;        var eleiid = mwebChartEleId+mwebii;        if($(this).hasClass('language-sequence')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = Diagram.parse($(this).text());            diagram.drawSVG(eleiid,{theme: 'simple'});        }else if($(this).hasClass('language-flow')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = flowchart.parse($(this).text());            diagram.drawSVG(eleiid);        }    });});</script>
+
+
+
+  </body>
+</html>

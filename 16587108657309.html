@@ -1,0 +1,390 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+    
+  k8s 网络基础 - Learn to learn
+  
+  </title>
+  
+  
+  <link href="atom.xml" rel="alternate" title="Learn to learn" type="application/atom+xml">
+    <link rel="stylesheet" href="asset/css/foundation.min.css" />
+    <link rel="stylesheet" href="asset/css/docs.css" />
+    <script src="asset/js/vendor/modernizr.js"></script>
+    <script src="asset/js/vendor/jquery.js"></script>
+  <script src="asset/highlightjs/highlight.pack.js"></script>
+  <link href="asset/highlightjs/styles/github.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+  function before_search(){
+    var searchVal = 'site: ' + document.getElementById('search_input').value;
+    document.getElementById('search_q').value = searchVal;
+    return true;
+  }
+</script>
+  </head>
+  <body class="antialiased hide-extras">
+    
+    <div class="marketing off-canvas-wrap" data-offcanvas>
+      <div class="inner-wrap">
+
+
+<nav class="top-bar docs-bar hide-for-small" data-topbar>
+
+
+  <section class="top-bar-section">
+  <div class="row">
+      <div style="position: relative;width:100%;"><div style="position: absolute; width:100%;">
+        <ul id="main-menu" class="left">
+        
+        <li id=""><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li id=""><a target="_self" href="index.html">Home</a></li>
+        
+        </ul>
+
+        <ul class="right" id="search-wrap">
+          <li>
+<form target="_blank" onsubmit="return before_search();" action="http://google.com/search" method="get">
+    <input type="hidden" id="search_q" name="q" value="" />
+    <input tabindex="1" type="search" id="search_input"  placeholder="Search"/>
+</form>
+</li>
+          </ul>
+      </div></div>
+  </div>
+  </section>
+
+</nav>
+
+        <nav class="tab-bar show-for-small">
+  <a href="javascript:void(0)" class="left-off-canvas-toggle menu-icon">
+    <span> &nbsp; Learn to learn</span>
+  </a>
+</nav>
+
+<aside class="left-off-canvas-menu">
+      <ul class="off-canvas-list">
+        
+        <li><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li><a target="_self" href="index.html">Home</a></li>
+        
+
+    <li><label>Categories</label></li>
+
+        
+            <li><a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html">redis</a></li>
+        
+            <li><a href="reading.html">reading</a></li>
+        
+            <li><a href="k8s.html">k8s</a></li>
+        
+            <li><a href="golang.html">golang</a></li>
+        
+            <li><a href="infra.html">infra</a></li>
+         
+
+      </ul>
+    </aside>
+
+<a class="exit-off-canvas" href="#"></a>
+
+
+        <section id="main-content" role="main" class="scroll-container">
+        
+       
+
+ <script type="text/javascript">
+  $(function(){
+    $('#menu_item_index').addClass('is_active');
+  });
+</script>
+<div class="row">
+  <div class="large-8 medium-8 columns">
+      <div class="markdown-body article-wrap">
+       <div class="article">
+          
+          <h1>k8s 网络基础</h1>
+     
+        <div class="read-more clearfix">
+          <span class="date">2022/7/25</span>
+
+          <span>posted in&nbsp;</span> 
+          
+              <span class="posted-in"><a href='k8s.html'>k8s</a></span>
+           
+         
+          <span class="comments">
+            
+
+            
+          </span>
+
+        </div>
+      </div><!-- article -->
+
+      <div class="article-content">
+      <p>大纲</p>
+
+<ul>
+<li>Pod 的网络构建
+
+<ul>
+<li>pause 容器</li>
+</ul></li>
+<li>Pod 之间的互连</li>
+<li>跨 node 之间 pod 互连</li>
+<li>CNI 需要做的事情是什么</li>
+<li>如何简单编写一个 CNI</li>
+</ul>
+
+<p>最近在持续学习 k8s 的网络层内容，这篇文章无非是所学的整理（知识的搬运工）。所谓最好的学习方式就是将所学教授给别人，所以，就写了这篇文章。</p>
+
+<span id="more"></span><!-- more -->
+
+<p>写作思路：<br/>
+首先给一个 big picture，CNI 是什么？怎么工作？为什么需要 CNI？<br/>
+再描述一下 k8s 结合 CNI 的工作过程。<br/>
+最后逐步讲解过程中每一步的的细节。（SPEC）</p>
+
+<p>再自己实现一个 CNI 程序。</p>
+
+<p>以问答的方式，最好从上层到下层，逐步深入。Pod 网络如何构建？Pod 之间怎么通信？我们怎么写一个CNI来拓展 k8s？</p>
+
+<p>涉及的知识点：</p>
+
+<ul>
+<li>组网的方式：bridge 或者是 overlay。</li>
+</ul>
+
+<h2 id="toc_0">k8s 的网络模型</h2>
+
+<ul>
+<li>Pod在三层网络上是互通的，且不需要 NAT。</li>
+</ul>
+
+<h2 id="toc_1">CNI</h2>
+
+<p>CNI 要做的事情：</p>
+
+<ul>
+<li>分配 IP</li>
+</ul>
+
+<p>CNI 构成：<br/>
+一个二进制文件<br/>
+一个管理程序，daemonset。</p>
+
+<p>CNI plugin 的角色是什么？</p>
+
+<h2 id="toc_2">Pod 网络通信</h2>
+
+<p>我们知道 Pod 是 k8s 模型中的最小单元，在网络层面来看，Pod 中的容器会共享 Network namespace。所以，同一个 Pod 之中的容器天然就是可以互相通信的。那么，Pod 之间的通信又是如何解决的呢？</p>
+
+<ul>
+<li>同一 Node 的 Pod 通信（由于 namespace 不同，是无法通信的）</li>
+<li>跨 Node 通信</li>
+</ul>
+
+<p>同 Node 的 Pod 通信是通过<code>Bridge</code>技术实现的。通过 veth pair，将 Pod 的网络和 bridge 连接起来。从而实现了 Pod 之间的通信。</p>
+
+<p>跨 Node 通信。<br/>
+<code>Bridge</code>方案。通过Node 之间的路由表，完成通信。<br/>
+<code>Overlay</code>方案。通过 VXLAN 技术</p>
+
+
+    
+
+      </div>
+
+      <div class="row">
+        <div class="large-6 columns">
+        <p class="text-left" style="padding:15px 0px;">
+      
+          <a href="16600088894747.html" 
+          title="Previous Post: Go 并发模型：Piplines 和 Cancellation">&laquo; Go 并发模型：Piplines 和 Cancellation</a>
+      
+        </p>
+        </div>
+        <div class="large-6 columns">
+      <p class="text-right" style="padding:15px 0px;">
+      
+          <a  href="16579847985931.html" 
+          title="Next Post: Gateway API 的介绍">Gateway API 的介绍 &raquo;</a>
+      
+      </p>
+        </div>
+      </div>
+      <div class="comments-wrap">
+        <div class="share-comments">
+          
+
+          
+
+          
+        </div>
+      </div>
+    </div><!-- article-wrap -->
+  </div><!-- large 8 -->
+
+
+
+
+ <div class="large-4 medium-4 columns">
+  <div class="hide-for-small">
+    <div id="sidebar" class="sidebar">
+          <div id="site-info" class="site-info">
+            
+                <h1>Learn to learn</h1>
+                <div class="site-des">你的观点，到底是谁的观点。你的知识，到底是谁的知识。</div>
+                <div class="social">
+
+
+
+
+
+
+
+
+
+
+
+  <a target="_blank" class="rss" href="atom.xml" title="RSS">RSS</a>
+                
+              	 </div>
+          	</div>
+
+             
+
+              <div id="site-categories" class="side-item ">
+                <div class="side-header">
+                  <h2>Categories</h2>
+                </div>
+                <div class="side-content">
+
+      	<p class="cat-list">
+        
+            <a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html"><strong>redis</strong></a>
+        
+            <a href="reading.html"><strong>reading</strong></a>
+        
+            <a href="k8s.html"><strong>k8s</strong></a>
+        
+            <a href="golang.html"><strong>golang</strong></a>
+        
+            <a href="infra.html"><strong>infra</strong></a>
+         
+        </p>
+
+
+                </div>
+              </div>
+
+              <div id="site-categories" class="side-item">
+                <div class="side-header">
+                  <h2>Recent Posts</h2>
+                </div>
+                <div class="side-content">
+                <ul class="posts-list">
+	      
+		      
+			      <li class="post">
+			        <a href="16689980685488.html">Titus Gateway 的一致性哈希缓存</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16687556126647.html">CNI 规范手册整理</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16685796237082.html">《Kubernetes 编程》笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16682704610665.html">Golang slice string 学习笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16672244272009.html">k8s 提供的分布式选主</a>
+			      </li>
+		     
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		   
+		  		</ul>
+                </div>
+              </div>
+        </div><!-- sidebar -->
+      </div><!-- hide for small -->
+</div><!-- large 4 -->
+
+</div><!-- row -->
+
+ <div class="page-bottom clearfix">
+  <div class="row">
+   <p class="copyright">Copyright &copy; 2015
+Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a>,&nbsp; 
+Theme used <a target="_blank" href="http://github.com">GitHub CSS</a>.</p>
+  </div>
+</div>
+
+        </section>
+      </div>
+    </div>
+
+  
+    
+
+    <script src="asset/js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+      function fixSidebarHeight(){
+        var w1 = $('.markdown-body').height();
+          var w2 = $('#sidebar').height();
+          if (w1 > w2) { $('#sidebar').height(w1); };
+      }
+      $(function(){
+        fixSidebarHeight();
+      })
+      $(window).load(function(){
+          fixSidebarHeight();
+      });
+     
+    </script>
+
+    <script src="asset/chart/all-min.js"></script><script type="text/javascript">$(function(){    var mwebii=0;    var mwebChartEleId = 'mweb-chart-ele-';    $('pre>code').each(function(){        mwebii++;        var eleiid = mwebChartEleId+mwebii;        if($(this).hasClass('language-sequence')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = Diagram.parse($(this).text());            diagram.drawSVG(eleiid,{theme: 'simple'});        }else if($(this).hasClass('language-flow')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = flowchart.parse($(this).text());            diagram.drawSVG(eleiid);        }    });});</script>
+
+
+
+  </body>
+</html>

@@ -1,0 +1,472 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+    
+  服务治理 - Learn to learn
+  
+  </title>
+  
+  
+  <link href="atom.xml" rel="alternate" title="Learn to learn" type="application/atom+xml">
+    <link rel="stylesheet" href="asset/css/foundation.min.css" />
+    <link rel="stylesheet" href="asset/css/docs.css" />
+    <script src="asset/js/vendor/modernizr.js"></script>
+    <script src="asset/js/vendor/jquery.js"></script>
+  <script src="asset/highlightjs/highlight.pack.js"></script>
+  <link href="asset/highlightjs/styles/github.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+  function before_search(){
+    var searchVal = 'site: ' + document.getElementById('search_input').value;
+    document.getElementById('search_q').value = searchVal;
+    return true;
+  }
+</script>
+  </head>
+  <body class="antialiased hide-extras">
+    
+    <div class="marketing off-canvas-wrap" data-offcanvas>
+      <div class="inner-wrap">
+
+
+<nav class="top-bar docs-bar hide-for-small" data-topbar>
+
+
+  <section class="top-bar-section">
+  <div class="row">
+      <div style="position: relative;width:100%;"><div style="position: absolute; width:100%;">
+        <ul id="main-menu" class="left">
+        
+        <li id=""><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li id=""><a target="_self" href="index.html">Home</a></li>
+        
+        </ul>
+
+        <ul class="right" id="search-wrap">
+          <li>
+<form target="_blank" onsubmit="return before_search();" action="http://google.com/search" method="get">
+    <input type="hidden" id="search_q" name="q" value="" />
+    <input tabindex="1" type="search" id="search_input"  placeholder="Search"/>
+</form>
+</li>
+          </ul>
+      </div></div>
+  </div>
+  </section>
+
+</nav>
+
+        <nav class="tab-bar show-for-small">
+  <a href="javascript:void(0)" class="left-off-canvas-toggle menu-icon">
+    <span> &nbsp; Learn to learn</span>
+  </a>
+</nav>
+
+<aside class="left-off-canvas-menu">
+      <ul class="off-canvas-list">
+        
+        <li><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li><a target="_self" href="index.html">Home</a></li>
+        
+
+    <li><label>Categories</label></li>
+
+        
+            <li><a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html">redis</a></li>
+        
+            <li><a href="reading.html">reading</a></li>
+        
+            <li><a href="k8s.html">k8s</a></li>
+        
+            <li><a href="golang.html">golang</a></li>
+        
+            <li><a href="infra.html">infra</a></li>
+         
+
+      </ul>
+    </aside>
+
+<a class="exit-off-canvas" href="#"></a>
+
+
+        <section id="main-content" role="main" class="scroll-container">
+        
+       
+
+ <script type="text/javascript">
+  $(function(){
+    $('#menu_item_index').addClass('is_active');
+  });
+</script>
+<div class="row">
+  <div class="large-8 medium-8 columns">
+      <div class="markdown-body article-wrap">
+       <div class="article">
+          
+          <h1>服务治理</h1>
+     
+        <div class="read-more clearfix">
+          <span class="date">2022/10/9</span>
+
+          <span>posted in&nbsp;</span> 
+          
+              <span class="posted-in"><a href='infra.html'>infra</a></span>
+           
+         
+          <span class="comments">
+            
+
+            
+          </span>
+
+        </div>
+      </div><!-- article -->
+
+      <div class="article-content">
+      <h2 id="toc_0">断路器模式</h2>
+
+<p>为什么需要断路器？<br/>
+试想这个一个场景：ServiceA 为 ServiceB 提供服务，正常情况下 ServiceA 能够很好的处理 ServiceB 的所有请求，世界岁月静好。突然有一天 ServiceA 突然抽风，服务负载高居不下，这个时候如果 ServiceB 还在继续发送请求无疑雪上加霜。一个处理方案是：停止发送请求，寄希望于 ServiceA 能够”缓“过来。等它正常之后，ServiceB 再继续发送请求。<br/>
+断路器就是为了这个场景而出现的一种技术。</p>
+
+<span id="more"></span><!-- more -->
+
+<p>断路器模式是一种客户端的服务治理方法。它实际上是一个状态机，通过在客户端统计请求的失败情况，来切换不同的状态。<br/>
+主要有 3 种状态：</p>
+
+<ul>
+<li>open 断路器打开，无法发送请求</li>
+<li>closed 断路器闭合，可以发送请求</li>
+<li>half-open 断路器半开，试探性发送请求；如果成功则打开；如果失败则闭合。</li>
+</ul>
+
+<p>状态机的转换图如下：</p>
+
+<p><img src="https://raw.githubusercontent.com/stillfox-lee/image/main/picgo/20221020002303.png" alt=""/></p>
+
+<p>具体的描述可以参看<a href="https://martinfowler.com/bliki/CircuitBreaker.html">martinfowler的 blog</a>。我主要分析一下在 Go 语言领域的一个特别小巧的库（只有不到 400 行代码）是如何实现这个功能的。他就是由sony实现的<a href="https://github.com/sony/gobreaker">gobreaker</a>。</p>
+
+<p>首先看一个例子：</p>
+
+<pre><code class="language-golang">
+var cb *gobreaker.CircuitBreaker
+
+func init() {
+    var setting gobreaker.Settings
+    setting.Name = &quot;HTTP GET&quot;
+    // `ReadyToTrip`是一个 hook，让用户可以编写触发打开断路器的条件。
+    // 在这个例子中，这个条件就是：总请求数超过 3 个，且失败率超过 60%。即打开断路器。
+    setting.ReadyToTrip = func(counts gobreaker.Counts) bool {
+        failureRatio := float64(counts.TotalFailures) / float64(counts.Requests)
+        return counts.Requests &gt;= 3 &amp;&amp; failureRatio &gt;= 0.6
+    }
+
+    cb = gobreaker.NewCircuitBreaker(st)
+}
+
+// 为 Get 请求添加断路器
+func Get(url string) ([]byte, error) {
+    // Execute 就是断路器执行核心逻辑的地方
+    // 如果 Execute 中的匿名函数返回失败，则意味着断路器收到失败，归入失败计数。
+    body, err := cb.Execute(func() (interface{}, error) {
+        resp, err := http.Get(url)
+        if err != nil {
+            return nil, err
+        }
+
+        defer resp.Body.Close()
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+            // 实际情况，这类应该算是编程错误，不归入断路器失败计数。
+            return nil, err
+        }
+
+        return body, nil
+    })
+    if err != nil {
+        return nil, err
+    }
+
+    return body.([]byte), nil
+}
+
+func main() {
+    body, err := Get(&quot;http://www.google.com/robots.txt&quot;)
+    // 这样的请求发送就是有断路器的功能的了
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Println(string(body))
+}
+
+</code></pre>
+
+<h4 id="toc_1">如何处理失败</h4>
+
+<h5 id="toc_2">counter 统计规则</h5>
+
+<p>上面的例子中，最核心的方法就是 <code>Execute()</code>，它如果收到失败，则会累加失败计数；它如果收到成功，则会累加成功计数。</p>
+
+<p>时间周期计数：<br/>
+在 open 状态，过一段时间窗口会变更为 half-open</p>
+
+<h5 id="toc_3">hook 函数</h5>
+
+<h5 id="toc_4">状态变更callback</h5>
+
+<h3 id="toc_5">断路器模式的缺陷</h3>
+
+<h4 id="toc_6">静态配置</h4>
+
+<p>断路器多数是属于静态配置</p>
+
+<h2 id="toc_7">限速器模式</h2>
+
+<p>限流器可以在客户端限流、也可以在服务端限流。<br/>
+在客户端的限流可以搭配断路器一起使用。</p>
+
+<p>go ratelimit 使用的是 <code>token bucket</code>算法：每秒向 bucket 发 r 个 token，每个请求需要获取一个 token 才通过。同时，为了应对突发流量，设置了 burst。最多允许 b 个 brust。</p>
+
+<p>主要方法：</p>
+
+<ul>
+<li>Allow</li>
+<li>AllowN</li>
+<li>Reserve</li>
+<li>ReserveN</li>
+<li>Wait</li>
+<li>WaitN</li>
+</ul>
+
+<p>最常用的应该就是<code>Wait</code>方法。三个方法都会消耗一个 token，三者在 token 消耗完之后的行为不一致。<code>Allow</code>会返回 false；<code>Reserve</code>会 ***；<code>Wait</code>会阻塞直至有新的 token可用。而带有<code>N</code>的方法则是TODO</p>
+
+<h4 id="toc_8">代码分析</h4>
+
+<p>概念：<br/>
+Event——相当于是请求，每个 event 都从 bucket 消耗 token。</p>
+
+<pre><code class="language-golang">type Limiter struct {
+    mu     sync.Mutex
+    limit  Limit       // 限制的速率
+    burst  int         // 最大并发量
+    tokens float64     // token 数量
+    last time.Time     // tokens 最后更新时间
+    lastEvent time.Time    // 最后 event 更新时间（过去的 event 或者将来的 event）
+}
+
+type Reservation struct {
+    ok        bool
+    lim       *Limiter
+    tokens    int
+    timeToAct time.Time
+    // This is the Limit at reservation time, it can change later.
+    limit Limit
+}
+
+</code></pre>
+
+<h4 id="toc_9">发展</h4>
+
+<p>这只是最简单的限速器使用。现实的场景远比这个要复杂得多，例如，对于 backlog 的支持。</p>
+
+<p>静态配置的问题<br/>
+在复杂的分布式系统中，负载、运行情况都是动态变化的。这种使用静态配置的方式无法准确的起到作用：限制严格的话，资源利用率不高；限制宽松的话，有可能导致资源枯竭甚至于 OOM。</p>
+
+
+    
+
+      </div>
+
+      <div class="row">
+        <div class="large-6 columns">
+        <p class="text-left" style="padding:15px 0px;">
+      
+          <a href="16661523130100.html" 
+          title="Previous Post: 断路器">&laquo; 断路器</a>
+      
+        </p>
+        </div>
+        <div class="large-6 columns">
+      <p class="text-right" style="padding:15px 0px;">
+      
+          <a  href="16644331920004.html" 
+          title="Next Post: 如何开发 Operator">如何开发 Operator &raquo;</a>
+      
+      </p>
+        </div>
+      </div>
+      <div class="comments-wrap">
+        <div class="share-comments">
+          
+
+          
+
+          
+        </div>
+      </div>
+    </div><!-- article-wrap -->
+  </div><!-- large 8 -->
+
+
+
+
+ <div class="large-4 medium-4 columns">
+  <div class="hide-for-small">
+    <div id="sidebar" class="sidebar">
+          <div id="site-info" class="site-info">
+            
+                <h1>Learn to learn</h1>
+                <div class="site-des">你的观点，到底是谁的观点。你的知识，到底是谁的知识。</div>
+                <div class="social">
+
+
+
+
+
+
+
+
+
+
+
+  <a target="_blank" class="rss" href="atom.xml" title="RSS">RSS</a>
+                
+              	 </div>
+          	</div>
+
+             
+
+              <div id="site-categories" class="side-item ">
+                <div class="side-header">
+                  <h2>Categories</h2>
+                </div>
+                <div class="side-content">
+
+      	<p class="cat-list">
+        
+            <a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html"><strong>redis</strong></a>
+        
+            <a href="reading.html"><strong>reading</strong></a>
+        
+            <a href="k8s.html"><strong>k8s</strong></a>
+        
+            <a href="golang.html"><strong>golang</strong></a>
+        
+            <a href="infra.html"><strong>infra</strong></a>
+         
+        </p>
+
+
+                </div>
+              </div>
+
+              <div id="site-categories" class="side-item">
+                <div class="side-header">
+                  <h2>Recent Posts</h2>
+                </div>
+                <div class="side-content">
+                <ul class="posts-list">
+	      
+		      
+			      <li class="post">
+			        <a href="16689980685488.html">Titus Gateway 的一致性哈希缓存</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16687556126647.html">CNI 规范手册整理</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16685796237082.html">《Kubernetes 编程》笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16682704610665.html">Golang slice string 学习笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16672244272009.html">k8s 提供的分布式选主</a>
+			      </li>
+		     
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		   
+		  		</ul>
+                </div>
+              </div>
+        </div><!-- sidebar -->
+      </div><!-- hide for small -->
+</div><!-- large 4 -->
+
+</div><!-- row -->
+
+ <div class="page-bottom clearfix">
+  <div class="row">
+   <p class="copyright">Copyright &copy; 2015
+Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a>,&nbsp; 
+Theme used <a target="_blank" href="http://github.com">GitHub CSS</a>.</p>
+  </div>
+</div>
+
+        </section>
+      </div>
+    </div>
+
+  
+    
+
+    <script src="asset/js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+      function fixSidebarHeight(){
+        var w1 = $('.markdown-body').height();
+          var w2 = $('#sidebar').height();
+          if (w1 > w2) { $('#sidebar').height(w1); };
+      }
+      $(function(){
+        fixSidebarHeight();
+      })
+      $(window).load(function(){
+          fixSidebarHeight();
+      });
+     
+    </script>
+
+    <script src="asset/chart/all-min.js"></script><script type="text/javascript">$(function(){    var mwebii=0;    var mwebChartEleId = 'mweb-chart-ele-';    $('pre>code').each(function(){        mwebii++;        var eleiid = mwebChartEleId+mwebii;        if($(this).hasClass('language-sequence')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = Diagram.parse($(this).text());            diagram.drawSVG(eleiid,{theme: 'simple'});        }else if($(this).hasClass('language-flow')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = flowchart.parse($(this).text());            diagram.drawSVG(eleiid);        }    });});</script>
+
+
+
+  </body>
+</html>

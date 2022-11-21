@@ -1,0 +1,720 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+    
+  Learn to learn
+  
+  </title>
+  
+  
+  <link href="atom.xml" rel="alternate" title="Learn to learn" type="application/atom+xml">
+    <link rel="stylesheet" href="asset/css/foundation.min.css" />
+    <link rel="stylesheet" href="asset/css/docs.css" />
+    <script src="asset/js/vendor/modernizr.js"></script>
+    <script src="asset/js/vendor/jquery.js"></script>
+  <script src="asset/highlightjs/highlight.pack.js"></script>
+  <link href="asset/highlightjs/styles/github.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+  function before_search(){
+    var searchVal = 'site: ' + document.getElementById('search_input').value;
+    document.getElementById('search_q').value = searchVal;
+    return true;
+  }
+</script>
+  </head>
+  <body class="antialiased hide-extras">
+    
+    <div class="marketing off-canvas-wrap" data-offcanvas>
+      <div class="inner-wrap">
+
+
+<nav class="top-bar docs-bar hide-for-small" data-topbar>
+
+
+  <section class="top-bar-section">
+  <div class="row">
+      <div style="position: relative;width:100%;"><div style="position: absolute; width:100%;">
+        <ul id="main-menu" class="left">
+        
+        <li id=""><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li id=""><a target="_self" href="index.html">Home</a></li>
+        
+        </ul>
+
+        <ul class="right" id="search-wrap">
+          <li>
+<form target="_blank" onsubmit="return before_search();" action="http://google.com/search" method="get">
+    <input type="hidden" id="search_q" name="q" value="" />
+    <input tabindex="1" type="search" id="search_input"  placeholder="Search"/>
+</form>
+</li>
+          </ul>
+      </div></div>
+  </div>
+  </section>
+
+</nav>
+
+        <nav class="tab-bar show-for-small">
+  <a href="javascript:void(0)" class="left-off-canvas-toggle menu-icon">
+    <span> &nbsp; Learn to learn</span>
+  </a>
+</nav>
+
+<aside class="left-off-canvas-menu">
+      <ul class="off-canvas-list">
+        
+        <li><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li><a target="_self" href="index.html">Home</a></li>
+        
+
+    <li><label>Categories</label></li>
+
+        
+            <li><a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html">redis</a></li>
+        
+            <li><a href="reading.html">reading</a></li>
+        
+            <li><a href="k8s.html">k8s</a></li>
+        
+            <li><a href="golang.html">golang</a></li>
+        
+            <li><a href="infra.html">infra</a></li>
+         
+
+      </ul>
+    </aside>
+
+<a class="exit-off-canvas" href="#"></a>
+
+
+        <section id="main-content" role="main" class="scroll-container">
+        
+       
+
+ <script type="text/javascript">
+	$(function(){
+		$('#menu_item_index').addClass('is_active');
+	});
+</script>
+<div class="row">
+	<div class="large-8 medium-8 columns">
+		<div class="markdown-body home-categories">
+		
+			<div class="article">
+                <a class="clearlink" href="16579847985931.html">
+                
+                  <h1>Gateway API 的介绍</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2022/7/16</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='k8s.html'>k8s</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="16568301086626.html">
+                
+                  <h1>纳瓦尔宝典</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<p>关于专长</p>
+
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2022/7/3</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='reading.html'>reading</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="Redis%20%E9%AB%98%E5%8F%AF%E7%94%A8.html">
+                
+                  <h1>Redis 集群高可用</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<!--
+思路整理：
+以 Sentinel 集群讲解整个高可用的思路。
+- replica 的异步复制
+- Sentinel 集群故障检测的 quorum 机制
+- Sentinel 集群处理故障转移的 Majority vote 机制
+
+为什么需要这样设计？
+- 什么是 quorum？
+    - 多数写
+    - 多数读
+    - 读写 overlap
+- Sentinel 为什么需要 3 个节点？
+- 
+
+- 脑裂问题如何处理
+-->
+
+<p>Redis 提供了两种高可用的形式，一种是 Sentinel HA，另一种是 Cluster 的 HA。本次只讨论 Sentinel 的 HA 设计中分布式相关的一些问题，而并不想讨论关于 Sentinel 如何工作的细节，因为这些内容网络上已经有很多资料了，而且我写的内容也不会比别人更加好。所以，本次只讨论一些我所关注的其他方面问题。例如：</p>
+
+<ul>
+<li>为什么至少需要部署 3 个 Sentinel？</li>
+<li>为什么需要分为<strong>故障检测</strong>和<strong>故障迁移</strong>两个阶段，而不是一起？</li>
+</ul>
+
+
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                   <a href="Redis%20%E9%AB%98%E5%8F%AF%E7%94%A8.html">Read more</a>&nbsp;&nbsp; 
+                    <span class="date">2022/6/14</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html'>redis</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="16424024680083.html">
+                
+                  <h1>Russ Cox 内存模型博客</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<p><a href="https://research.swtch.com/mm">https://research.swtch.com/mm</a></p>
+
+<p>概述：软、硬件之间会出现一些执行顺序一致性偏离的问题。一部分是因为硬件的缓存加速架构导致，一部分是因为CPU的重排导致。而且，在多核CPU出现之后，这个问题更加突出。所以，软、硬件之间就需要一个协议：保证二者遵守同样的顺序一致性策略。那就是DRF-SC。</p>
+
+<blockquote>
+<p>顺序一致性</p>
+</blockquote>
+
+<p>首先假设程序运行是<code>sequentially consistent</code>的，多核之间只会出现<strong>交替执行</strong>的情况。</p>
+
+<pre><code class="language-golang">Litmus Test: Message Passing
+Can this program see r1 = 1, r2 = 0?
+
+// Thread 1           // Thread 2
+x = 1                 r1 = y
+y = 1                 r2 = x
+</code></pre>
+
+<p>对于这个程序，只会出现6种交替执行的结果：</p>
+
+<p><img src="media/16424024680083/16424028633902.jpg" alt=""/></p>
+
+<p>在<code>sequentially consistent</code>的硬件上，不会出现<code>r1=1, r2=0</code>的结果。</p>
+
+<h3 id="toc_0">sequentially consistent的一个思维模型：</h3>
+
+<p>想象所有的处理器都连接到一个共享内存上，它可以一次处理一个线程的读或者写请求。这个<strong>single-use-at-a-time</strong>的共享内存对所有的内存访问都施加了：<code>sequentially consistent</code>。</p>
+
+<p><img src="media/16424024680083/16424030411616.jpg" alt=""/></p>
+
+<p>但是，放弃严格的<code>sequentially consistent</code>可以让硬件更快地执行程序，所以现代硬件在各个方面都不完全遵循<code>sequentially consistent</code>。</p>
+
+<h3 id="toc_1">硬件对于<code>sequentially consistent</code>的偏离</h3>
+
+<h4 id="toc_2">x86 Total Store Order（x86-TSO）</h4>
+
+<p>现代x86系统的内存模型对应的硬件图：<br/>
+<img src="media/16424024680083/16424034790761.jpg" alt=""/></p>
+
+<p>处理器为写入维护了一个FIFO队列，所有的写入都先入队列。本处理器的查询，先到队列中查询。这就意味着，写入操作会优先对同一个处理器的读操作生效。对于其他的处理器，等到写入队列更新共享内存的时候，就能生效了。很关键的一点是：每个处理器都保证写入到共享内存的顺序。所以，这个模型被称为——<strong>Total Store Order</strong>。</p>
+
+<p>对于这个模型，之前的litmus test还是不会出现<code>r1=1, r2=0</code>的结果。</p>
+
+<pre><code class="language-golang">Litmus Test: Message Passing
+Can this program see r1 = 1, r2 = 0?
+// Thread 1           // Thread 2
+x = 1                 r1 = y
+y = 1                 r2 = x
+On sequentially consistent hardware: no. 
+On x86 (or other TSO): no.
+</code></pre>
+
+<p>因为写入队列保证了Thread1在y之前将x写入共享内存，然后<code>TSO</code>模型提供了另一个保证：Thread2在读取y的新值之前，必须先读取到x的新值。</p>
+
+<p>在上面的情况中，两种模型（<code>sequentially consistent</code>和<code>x86-TSO</code>）表现是一致的。但是，在下面这个情况中，两个模型的表现是不同的：</p>
+
+<pre><code class="language-golang">Litmus Test: Write Queue (also called Store Buffer)
+Can this program see r1 = 0, r2 = 0?
+// Thread 1           // Thread 2
+x = 1                 y = 1
+r1 = y                r2 = x
+On sequentially consistent hardware: no.
+On x86 (or other TSO): yes!
+</code></pre>
+
+<p>在<code>sequentially consistent</code>模型中，<code>x=1</code>或者<code>y=1</code>必须有一个先发生，然后另一个线程的读操作肯定会观察到它。但是，在<code>x86-TSO</code>下，两个线程的写入操作可能都还在队列中，因此两个线程都读到0值。</p>
+
+<h5 id="toc_3">对同步算法的影响</h5>
+
+<p>在<a href="https://en.wikipedia.org/wiki/Dekker%27s_algorithm">德克尔算法</a>或<a href="https://en.wikipedia.org/wiki/Dekker%27s_algorithm">彼得森算法</a>中，会使用两个同步变量来控制同步：如果一个线程没有看见另一个线程的所有写操作，线程可能会中断。<br/>
+为了解决这个问题，我们需要一个更严格的内存排序。<strong>非顺序一致</strong>的硬件提供了一种被称为<code>内存屏障</code>的显示指令，可以用于控制排序。通过添加一个内存屏障，可以确保每个线程在开始读取之前，都会刷新它先前对内存的写入操作：</p>
+
+<pre><code class="language-c">
+// Thread 1           // Thread 2
+x = 1                 y = 1
+barrier               barrier
+r1 = y                r2 = x
+</code></pre>
+
+<p>有了这个技术，同步算法就可以正常工作了。</p>
+
+<blockquote>
+<p>内存屏障（barrier）<br/>
+确保每个线程在开始读之前，都会刷新它之前对内存的写入操作。</p>
+</blockquote>
+
+<h3 id="toc_4">ARM/POWER Relaxed Memory Model</h3>
+
+<h3 id="toc_5">弱有序和无数据竞争的顺序一致性</h3>
+
+<p>硬件层面的执行细节（CPU的cache和memory同步、多核之间的同步）是非常复杂的。而且不同的硬件架构，实现也不一致。<br/>
+Sarita Adve和Mark Hill在他们1990年的论文“Weak Ordering – A New Definition”中正是提出了这种方法。他们把“弱有序”定义为如下。</p>
+
+<blockquote>
+<p>Let a synchronization model be a set of constraints on memory accesses that specify how and when synchronization needs to be done.</p>
+
+<p>同步模型是对内存访问的一组约束，这些约束指定了何时以及如何进行同步。</p>
+
+<p>Hardware is weakly ordered with respect to a synchronization model if and only if it appears sequentially consistent to all software that obey the synchronization model.</p>
+
+<p>硬件相对于同步模型来说是弱有序的。只有当软件遵守与硬件同样的同步模型的时候，软件与硬件之间才是顺序一致的。</p>
+</blockquote>
+
+<p><em>由于软、硬件之间对于同步的实现差异很大。所以，为了能够尽量统一而提出了一个方案：弱有序、DRF下的顺序一致性。使得软件与硬件工程师能够有一个标准来实现同步技术。而且也让硬件工程师知道了改如何在不影响程序的行为的情况下来优化效率（重排、同步）。</em></p>
+
+<h4 id="toc_6">DRF 无数据竞争同步模型</h4>
+
+<p>该模型假设，硬件具有对内存的读、写进行同步的能力。内存的读、写操作可以在同步操作之间重排，但是不能跨越它们移动（同步操作可以用来做重排的内存屏障）。</p>
+
+<p><em>意思就是说：可以在对有数据竞争的操作之间，引入一个内存屏障，来消除这种数据竞争。硬件优化时，重排不能跨越内存屏障进行。</em></p>
+
+<p>例如有一个这样的data-race情况：<br/>
+<img src="media/16424024680083/16426460964455.jpg" alt=""/></p>
+
+<p>通过引入一个同步操作，就可以消除这种data-race：<br/>
+<img src="media/16424024680083/16426461306274.jpg" alt="" style="width:427px;"/></p>
+
+<p>这种系统保证无数据竞争的顺序一致性的观点被缩写为DRF-SC。这就使得我们在使用高级编程语言的时候能够正确的写出多线程程序得到了保证。</p>
+
+<h2 id="toc_7">高级语言的内存模型</h2>
+
+<p>通常CPU和编译器都会进行重排。我们通过内存屏障来保证CPU重排带来的数据竞争，通过编程语言提供的原子变量来避免编译器重排带来的数据竞争。</p>
+
+<p>通过原子变量（atomic variable）或者原子操作（atomic operation）提供特殊能力，允许程序同步其线程。</p>
+
+<p>编程语言内存模型规定了程序员和编译器所需的额外细节，作为他们之间的约定。上面谈到的通用特征基本上适用于所有现代语言，但直到最近，事情才收敛到一点:在21世纪初，有明显更多的变种。即使在今天，各种语言在更多的排序问题上也有显著的差异，包括:</p>
+
+<ul>
+<li>原子变量们本身的排序保证是什么？</li>
+<li>变量是否既可以原子访问，又可以非原子访问？</li>
+<li>除了原子之外是否还有其它同步机制？</li>
+<li>是否存在不同步的原子操作？</li>
+<li>有数据竞争的程序有什么保证？</li>
+</ul>
+
+<p>原子、同步</p>
+
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2022/1/17</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='golang.html'>golang</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+			<div class="article">
+                <a class="clearlink" href="16388457732677.html">
+                
+                  <h1>服务端缓存工程实践</h1>
+                  <div class="a-content">
+                      
+                      <div class="a-content-text">
+                        
+                        	<p>可以涉及的内容：</p>
+
+<ul>
+<li>缓存使用</li>
+<li>用redis如何解决惊群效应 </li>
+<li>redis怎么做分片、复制、同步、集群</li>
+<li>groupcache怎么实现</li>
+</ul>
+
+<h2 id="toc_0">缓存使用中的典型问题</h2>
+
+<h3 id="toc_1">缓存穿透</h3>
+
+<p>收到的请求的key在DB中不存在，进而无法缓存，这周大量的请求会<strong>穿透</strong>缓存，对数据库造成压力。<br/>
+解决方案：<br/>
+<strong>布隆过滤器</strong><br/>
+对于这种情况的应对方案，可以在系统内部实现一个布隆过滤器，依靠布隆过滤器来拦截这些不存在的查询请求。</p>
+
+<h3 id="toc_2">缓存击穿</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Thundering_herd_problem">维基百科Thundering_herd_problem</a><br/>
+<a href="https://www.facebook.com/Engineering/videos/10153675295382200/">Facebook如何处理缓存击穿</a></p>
+
+<p>某个热点数据突然miss，大量同样的请求抵达DB，造成压力。<br/>
+应对方案：<br/>
+<strong>同步锁</strong><br/>
+对请求的key加上同步锁，只让一个请求抵达DB，其他请求阻塞。如果是单进程内，可以使用<code>singleflight</code>来实现。如果是分布式情况下，可以加<em>分布式锁</em>。</p>
+
+<h3 id="toc_3">缓存雪崩</h3>
+
+<p>与<strong>缓存击穿</strong>不同的是，雪崩时是出现大量的数据miss，所有请求都抵达DB。</p>
+
+<h2 id="toc_4">业务中缓存的设计模式</h2>
+
+<p>缓存虽然不要求<strong>强一致性</strong>，但是对<strong>最终一致性</strong>还是有要求的。有时候业务代码不规范就可能导致数据污染，而出现数据不一致的情况。</p>
+
+<p>更新缓存的套路：</p>
+
+<ul>
+<li>Cache-Aside</li>
+<li>Read/Write Through</li>
+<li>Write Behind Caching</li>
+</ul>
+
+<h3 id="toc_5">Cache-Aside</h3>
+
+<p>从数据的读、写两个场景做不同的逻辑处理：</p>
+
+<ul>
+<li>read：先从cache读，如果miss则从DB读，然后更新cache，最后返回；</li>
+<li>write：先写DB，然后让cache失效。</li>
+</ul>
+
+<p>开发中主要是写流程可能会有不同，先写DB或者还是先写cache，是更新cache还是让cache失效。就这个问题会出现4种组合：</p>
+
+<table>
+<thead>
+<tr>
+<th>1</th>
+<th>先写DB</th>
+<th>再写cache</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>2</td>
+<td>先写DB</td>
+<td>再让cache失效</td>
+</tr>
+<tr>
+<td>3</td>
+<td>先写cache</td>
+<td>再写DB</td>
+</tr>
+<tr>
+<td>4</td>
+<td>先让cache失效</td>
+<td>再写DB</td>
+</tr>
+</tbody>
+</table>
+
+<p>第一，是先写DB还是后写cache？后写DB的话，可能会出现：一个写操作先更新了cache还未更新DB，这时，一个读操作从DB读了数据，这样就导致了不一致的情况出现。<br/>
+第二，是更新cache还是使cache失效？我们来考虑并发写的场景：两个并发写入，次新写入操作在最新写入操作后完成更新cache。如果是写cache的话，那么又会出现不一致的问题，如果是失效的话，那么先后次序就不那么重要了。<br/>
+所以，我们采用<strong>先写DB，再使cache失效</strong>的方式来处理缓存。</p>
+
+<blockquote>
+<p>其实，这种模式也会有问题。考虑一个场景：读请求从DB获取到数据还未写入cache时，写请求已经完成了DB更新且失效cache，读请求最后才完成cache写入。这样，数据还是不一致的。</p>
+</blockquote>
+
+<p>如何做到保持DB与cache保持<strong>强一致</strong>？那就需要用到2PC这种分布式事务的解决方案了。但是，这样会使得系统的复杂度变高。而Cache-Aside的方案只会在低概率出现不一致的情况，同时，我们可以对cache设置过期时间做到<strong>最终一致</strong>。所以，大部分情况下Cache-Aside还是可以接受的一个方案。</p>
+
+<h3 id="toc_6">Read/Write Through</h3>
+
+<p>Read/Write Through模式与Cache-Aside逻辑一致，只是对于应用程序而言只有一个cache，读写操作都是对cache进行的，而具体的持久化操作，则是由cache进行的。<br/>
+write through操作是同时写cache和db（同步），这样可以保证一致性，但是延迟较高。</p>
+
+<h3 id="toc_7">Write Behind Caching</h3>
+
+<p>Write Behind Caching其实与Write back技术差不多，应用程序只需要对cache进行读、写。最终cache与db的数据同步是由cache异步执行的。</p>
+
+<h3 id="toc_8">如何保证缓存与数据库的事务</h3>
+
+<p>TBD</p>
+
+<h3 id="toc_9">分布式下的缓存</h3>
+
+<p>TBD</p>
+
+<h2 id="toc_10">引用资料</h2>
+
+<ul>
+<li><a href="https://coolshell.cn/articles/17416.html">coolshell 缓存更新的套路</a></li>
+<li><a href="http://icyfenix.cn/architect-perspective/general-architecture/diversion-system/cache-middleware.html">凤凰架构</a></li>
+<li><a href="https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf">Scaling Memcache at Facebook</a></li>
+</ul>
+
+                        
+                      </div>
+                  </div>
+                </a>
+                <div class="read-more clearfix">
+                  <div class="more-left left">
+                  
+                    <span class="date">2021/12/7</span>
+                    <span>posted in&nbsp;</span> 
+          				  
+          					    <span class="posted-in"><a href='infra.html'>infra</a></span>
+          				   
+                  </div>
+                  <div class="more-right right">
+                  <span class="comments">
+                      
+
+                       
+                  </span>
+                  </div>
+                </div>
+              </div><!-- article -->
+        
+              
+
+
+			<div class="row">
+			  <div class="large-6 columns">
+			  <p class="text-left" style="padding-top:25px;">
+			   <a href="all.html">&laquo; Prev Page</a>  
+			  </p>
+			  </div>
+			  <div class="large-6 columns">
+			<p class="text-right" style="padding-top:25px;">
+			
+			</p>
+			  </div>
+			</div>
+		</div>
+	</div><!-- large 8 -->
+
+ <div class="large-4 medium-4 columns">
+  <div class="hide-for-small">
+    <div id="sidebar" class="sidebar">
+          <div id="site-info" class="site-info">
+            
+                <h1>Learn to learn</h1>
+                <div class="site-des">你的观点，到底是谁的观点。你的知识，到底是谁的知识。</div>
+                <div class="social">
+
+
+
+
+
+
+
+
+
+
+
+  <a target="_blank" class="rss" href="atom.xml" title="RSS">RSS</a>
+                
+              	 </div>
+          	</div>
+
+             
+
+              <div id="site-categories" class="side-item ">
+                <div class="side-header">
+                  <h2>Categories</h2>
+                </div>
+                <div class="side-content">
+
+      	<p class="cat-list">
+        
+            <a href="%E6%95%B0%E6%8D%AE%E7%B3%BB%E7%BB%9F.html"><strong>redis</strong></a>
+        
+            <a href="reading.html"><strong>reading</strong></a>
+        
+            <a href="k8s.html"><strong>k8s</strong></a>
+        
+            <a href="golang.html"><strong>golang</strong></a>
+        
+            <a href="infra.html"><strong>infra</strong></a>
+         
+        </p>
+
+
+                </div>
+              </div>
+
+              <div id="site-categories" class="side-item">
+                <div class="side-header">
+                  <h2>Recent Posts</h2>
+                </div>
+                <div class="side-content">
+                <ul class="posts-list">
+	      
+		      
+			      <li class="post">
+			        <a href="16689980685488.html">Titus Gateway 的一致性哈希缓存</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16687556126647.html">CNI 规范手册整理</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16685796237082.html">《Kubernetes 编程》笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16682704610665.html">Golang slice string 学习笔记</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16672244272009.html">k8s 提供的分布式选主</a>
+			      </li>
+		     
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		  
+		      
+		   
+		  		</ul>
+                </div>
+              </div>
+        </div><!-- sidebar -->
+      </div><!-- hide for small -->
+</div><!-- large 4 -->
+
+</div><!-- row -->
+
+ <div class="page-bottom clearfix">
+  <div class="row">
+   <p class="copyright">Copyright &copy; 2015
+Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a>,&nbsp; 
+Theme used <a target="_blank" href="http://github.com">GitHub CSS</a>.</p>
+  </div>
+</div>
+
+        </section>
+      </div>
+    </div>
+
+  
+    
+
+    <script src="asset/js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+      function fixSidebarHeight(){
+        var w1 = $('.markdown-body').height();
+          var w2 = $('#sidebar').height();
+          if (w1 > w2) { $('#sidebar').height(w1); };
+      }
+      $(function(){
+        fixSidebarHeight();
+      })
+      $(window).load(function(){
+          fixSidebarHeight();
+      });
+     
+    </script>
+
+    <script src="asset/chart/all-min.js"></script><script type="text/javascript">$(function(){    var mwebii=0;    var mwebChartEleId = 'mweb-chart-ele-';    $('pre>code').each(function(){        mwebii++;        var eleiid = mwebChartEleId+mwebii;        if($(this).hasClass('language-sequence')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = Diagram.parse($(this).text());            diagram.drawSVG(eleiid,{theme: 'simple'});        }else if($(this).hasClass('language-flow')){            var ele = $(this).addClass('nohighlight').parent();            $('<div id="'+eleiid+'"></div>').insertAfter(ele);            ele.hide();            var diagram = flowchart.parse($(this).text());            diagram.drawSVG(eleiid);        }    });});</script>
+
+
+
+  </body>
+</html>
